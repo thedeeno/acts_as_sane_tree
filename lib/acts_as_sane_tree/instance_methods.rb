@@ -80,6 +80,11 @@ module ActsAsSaneTree
     end
     alias_method :descendents, :descendants
 
+    # Returns descendants and self
+	def self_and_descendants
+		descendants(:raw) << self
+	end
+
     # Returns the depth of the current node. 0 depth represents the root of the tree
     def depth
       query =
