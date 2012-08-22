@@ -85,6 +85,11 @@ module ActsAsSaneTree
 		descendants(:raw) << self
 	end
 
+	# Returns wether node is the last of a branch or not
+	def leaf?
+		descendants({:depth => 1}).nil?
+	end
+
     # Returns the depth of the current node. 0 depth represents the root of the tree
     def depth
       query =
