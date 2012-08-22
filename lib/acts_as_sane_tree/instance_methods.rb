@@ -95,6 +95,11 @@ module ActsAsSaneTree
 		descendants({:depth => 1}).nil?
 	end
 
+	# Sets node as our parent
+	def move_to_child_of(node)
+		self.parent_id = node.id
+	end
+
     # Returns the depth of the current node. 0 depth represents the root of the tree
     def depth
       query =
