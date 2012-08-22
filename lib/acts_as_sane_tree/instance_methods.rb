@@ -82,7 +82,7 @@ module ActsAsSaneTree
 
     # Returns descendants and self
 	def self_and_descendants
-		descendants(:raw) << self
+		descendants(:raw).unshift self
 	end
 
 	# Returns wether this is a child or not
