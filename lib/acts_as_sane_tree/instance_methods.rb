@@ -97,7 +97,8 @@ module ActsAsSaneTree
 
 	# Sets node as our parent
 	def move_to_child_of(node)
-		self.parent_id = node.id
+		parent_id = node.id
+		save
 	end
 
     # Returns the depth of the current node. 0 depth represents the root of the tree
