@@ -92,13 +92,7 @@ module ActsAsSaneTree
 
 	# Returns wether node is the last of a branch or not
 	def leaf?
-		descendants({:depth => 1}).nil?
-	end
-
-	# Sets node as our parent
-	def move_to_child_of(node)
-		parent_id = node.id
-		save
+		descendants({:depth => 1}).empty?
 	end
 
     # Returns the depth of the current node. 0 depth represents the root of the tree
