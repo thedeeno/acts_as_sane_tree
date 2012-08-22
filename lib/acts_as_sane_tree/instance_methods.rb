@@ -85,6 +85,11 @@ module ActsAsSaneTree
 		descendants(:raw) << self
 	end
 
+	# Returns wether this is a child or not
+	def child?
+		!root?
+	end
+
 	# Returns wether node is the last of a branch or not
 	def leaf?
 		descendants({:depth => 1}).nil?
