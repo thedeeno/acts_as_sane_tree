@@ -1,36 +1,16 @@
 module ActsAsSaneTree
   module SingletonMethods
-    
-    # Check if we are in rails 3
-    def rails_3?
-      @is_3 ||= !defined?(Arel).nil?
-    end
 
     # Return all root nodes
     def roots
-      if(rails_3?)
-        configuration[:class].where(
-          "#{configuration[:foreign_key]} IS NULL"
-        ).order(configuration[:order])
-      else
-        configuration[:class].scoped(
-          :conditions => "#{configuration[:foreign_key]} IS NULL",
-          :order => configuration[:order]
-        )
-      end
+      configuration[:class].where(
+        "#{configuration[:foreign_key]} IS NULL"
+      ).order(configuration[:order])
     end
 
     # Return first root node
     def root
-      if(rails_3?)
-        configuration[:class].where("#{configuration[:foreign_key]} IS NULL").order(configuration[:order]).first
-      else
-        configuration[:class].find(
-          :first, 
-          :conditions => "#{configuration[:foreign_key]} IS NULL", 
-          :order => configuration[:order]
-        )
-      end
+      configuration[:class].where("#{configuration[:foreign_key]} IS NULL").order(configuration[:order]).first
     end
 
     # src:: Array of nodes
@@ -62,21 +42,17 @@ module ActsAsSaneTree
       if(s.empty? || c.empty?)
         nil
       else
-        query = 
+        query =
           "(WITH RECURSIVE crumbs AS (
             SELECT #{configuration[:class].table_name}.*, 0 AS depth FROM #{configuration[:class].table_name} WHERE id in (#{s.join(', ')})
             UNION ALL
             SELECT alias1.*, crumbs.depth + 1 FROM crumbs JOIN #{configuration[:class].table_name} alias1 on alias1.parent_id = crumbs.id
             #{configuration[:max_depth] ? "WHERE crumbs.depth + 1 < #{configuration[:max_depth].to_i}" : ''}
           ) SELECT * FROM crumbs WHERE id in (#{c.join(', ')})) as #{configuration[:class].table_name}"
-        if(rails_3?)
-          configuration[:class].from(query)
-        else
-          configuration[:class].scoped(:from => query)
-        end
+        configuration[:class].from(query)
       end
     end
-    
+
     # args:: ActiveRecord models or IDs - Symbols: :raw, :no_self - Hash: {:to_depth => n, :at_depth => n}
     # Returns provided nodes plus all descendants of provided nodes in nested Hash where keys are nodes and values are children
     # :raw:: return value will be flat array
@@ -104,7 +80,7 @@ module ActsAsSaneTree
         depth_clause = "#{configuration[:class].table_name}.depth + 1 < #{depth.to_i + 2}"
       end
       base_ids = args.map{|x| x.is_a?(ActiveRecord::Base) ? x.id : x.to_i}
-      query = 
+      query =
         "(WITH RECURSIVE crumbs AS (
           SELECT #{configuration[:class].table_name}.*, #{no_self ? -1 : 0} AS depth FROM #{configuration[:class].table_name} WHERE #{base_ids.empty? ? 'parent_id IS NULL' : "id in (#{base_ids.join(', ')})"}
           UNION ALL
@@ -112,32 +88,17 @@ module ActsAsSaneTree
           #{depth_restriction}
         ) SELECT * FROM crumbs) as #{configuration[:class].table_name}"
       q = nil
-      if(rails_3?)
-        q = configuration[:class].from(
-          query
-        ).where(
-          "#{configuration[:class].table_name}.depth >= 0"
-        )
-        if(depth_clause)
-          q = q.where(depth_clause)
-        end
-        if(configuration[:order].present?)
-          q = q.order(configuration[:order])
-        end
-      else
-        q = configuration[:class].scoped(
-          :from => query, 
-          :conditions => "#{configuration[:class].table_name}.depth >= 0"
-        )
-        if(configuration[:order].present?)
-          q = q.scoped(:order => configuration[:order])
-        end
-        if(depth_clause)
-          q = q.scoped(:conditions => depth_clause)
-        end
+
+      q = configuration[:class].from(
+        query
+      ).where(
+        "#{configuration[:class].table_name}.depth >= 0"
+      )
+      if(depth_clause)
+        q = q.where(depth_clause)
       end
-      unless(rails_3?)
-        q = q.scoped(scope(:find))
+      if(configuration[:order].present?)
+        q = q.order(configuration[:order])
       end
       unless(raw)
         res = ActiveSupport::OrderedHash.new

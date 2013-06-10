@@ -15,20 +15,13 @@ module ActsAsSaneTree
           FROM crumbs
           JOIN #{self.class.configuration[:class].table_name} alias1 ON alias1.id = crumbs.parent_id
         ) SELECT * FROM crumbs WHERE crumbs.id != #{id}) as #{self.class.configuration[:class].table_name}"
-      if(self.class.rails_3?)
-        self.class.configuration[:class].send(:with_exclusive_scope) do
-          self.class.configuration[:class].from(
-            query
-          ).order("#{self.class.configuration[:class].table_name}.depth DESC")
-        end
-      else
-        self.class.configuration[:class].send(:with_exclusive_scope) do
-          self.class.configuration[:class].scoped(
-            :from => query,
-            :order => "#{self.class.configuration[:class].table_name}.depth DESC"
-          )
-        end
+
+      self.class.configuration[:class].send(:with_exclusive_scope) do
+        self.class.configuration[:class].from(
+          query
+        ).order("#{self.class.configuration[:class].table_name}.depth DESC")
       end
+
     end
 
     # Returns the root node of the tree.
@@ -81,19 +74,19 @@ module ActsAsSaneTree
     alias_method :descendents, :descendants
 
     # Returns descendants and self
-	def self_and_descendants
-		descendants(:raw).unshift self
-	end
+    def self_and_descendants
+      descendants(:raw).unshift self
+    end
 
-	# Returns wether this is a child or not
-	def child?
-		!root?
-	end
+    # Returns wether this is a child or not
+    def child?
+      !root?
+    end
 
-	# Returns wether node is the last of a branch or not
-	def leaf?
-		descendants({:depth => 1}).empty?
-	end
+    # Returns wether node is the last of a branch or not
+    def leaf?
+      descendants({:depth => 1}).empty?
+    end
 
     # Returns the depth of the current node. 0 depth represents the root of the tree
     def depth
